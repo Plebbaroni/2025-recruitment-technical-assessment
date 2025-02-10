@@ -26,7 +26,7 @@ const app = express();
 app.use(express.json());
 
 // Store your recipes here!
-const cookbook: any = null;
+const cookbook: any = [];
 
 // Task 1 helper (don't touch)
 app.post("/parse", (req:Request, res:Response) => {
@@ -45,26 +45,151 @@ app.post("/parse", (req:Request, res:Response) => {
 // [TASK 1] ====================================================================
 // Takes in a recipeName and returns it in a form that 
 const parse_handwriting = (recipeName: string): string | null => {
-  // TODO: implement me
-  return recipeName
+  let newRecipeName:string = "";
+
+  for (const c of recipeName) {
+    if ((newRecipeName.length === 0 || newRecipeName[newRecipeName.length-1] === ' ') && isAlpha(c)) {
+      newRecipeName += c.toUpperCase();
+    } else if (newRecipeName.length > 0 && (c === '-' || c === '_' || c === ' ') && newRecipeName[newRecipeName.length-1] !== ' ') {
+      newRecipeName += ' ';
+    } else if (isAlpha(c)){
+      newRecipeName += c.toLowerCase();
+    }
+  }
+
+  if (newRecipeName.length <= 0) {
+    return null;
+  }
+  if (newRecipeName[newRecipeName.length-1] === ' ') {
+    newRecipeName = newRecipeName.slice(0, -1)
+  }
+  return newRecipeName;
+}
+//HELPER FUNCTIONS FOR TASK 1
+
+//Checks to see if the character is alphabetical
+const isAlpha = (c:string): boolean => {
+  if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
+    return true;
+  }
+
+  return false;
 }
 
 // [TASK 2] ====================================================================
 // Endpoint that adds a CookbookEntry to your magical cookbook
 app.post("/entry", (req:Request, res:Response) => {
   // TODO: implement me
-  res.status(500).send("not yet implemented!")
+  const recipe = req.body
+
+  if (recipe.type !== "recipe" && recipe.type !== "ingredient") {
+    res.status(400).send({"message": "Not a valid recipe type!"});
+    return;
+  } 
+  if (recipe.cookTime < 0) {
+    res.status(400).send({"message": "Cooktime must be greater than or equal to zero!"});
+    return;
+  }
+
+  if (findRecipe(recipe.name) !== null) {
+    res.status(400).send({"message": "Cookbook entry already exists!"});
+    return;
+  }
+
+  if (recipe.type === "recipe" && !hasUniqueIngredients(recipe.requiredItems)) {
+    res.status(400).send({"message":"Ingredients need to be unique!"});
+    return;
+  }
+
+  cookbook.push(recipe);
+  res.status(200).send({});
+  return;
 
 });
 
+//TASK 2(and maybe 3) HELPER FUNCTIONS
+
+//Finds and returns a recipe/ingredient if it exists, otherwise null
+const findRecipe = (recipeName:string):ingredient|recipe|null => {
+  for (const recipe of cookbook) {
+    if (recipeName === recipe.name) {
+      return recipe;
+    }
+  }
+  return null;
+}
+
+//Checks to see if the required items array only contains unique ingredients
+const hasUniqueIngredients = (requiredItems): boolean => {
+  let dictionary: Map<string, number> = new Map();
+
+  for (const item of requiredItems) {
+    const count = getOrDefault(dictionary, item.name);
+    if (count > 0) {
+      return false;
+    }
+    dictionary.set(item.name, count+1);
+  }
+  return true;
+}
+
+//getOrDefault function that returns 0 if key doesn't exist
+const getOrDefault = (dictionary:Map<string, number>, key:string):number => {
+  const num = dictionary.get(key);
+  if (num === null) {
+    return 0;
+  } 
+  return num;
+}
 // [TASK 3] ====================================================================
 // Endpoint that returns a summary of a recipe that corresponds to a query name
 app.get("/summary", (req:Request, res:Request) => {
-  // TODO: implement me
-  res.status(500).send("not yet implemented!")
+  const recipeName = req.query.name;
+  const recipe = findRecipe(recipeName);
+
+  if (!recipe) {
+    return res.status(400).send({"message":"recipe does not exist!"});
+  }
+
+  if ('cookTime' in recipe) {
+    return res.status(400).send({"message":"ingredient name entered!"});
+  }
+  let dictionary: Map<string, number> = new Map()
+  let cookTime = 0;
+  for (const item of recipe.requiredItems) {
+    if (!getIngredients(dictionary, cookTime, item)) {
+      return res.status(400).send({"message":"Failed to find ingredient!"});
+    }
+  }
+
+  return res.status(200).send({
+    "name": recipeName,
+    "cookTime":cookTime,
+    "ingredients":dictionary
+  })
 
 });
 
+//HELPER FUNCTIONS FOR TASK 3
+//Recursively adds ingredients, quantity, and cookTime to the dictionary, returning true if it was
+//successful in finding the ingredients. Otherwise returns false.
+const getIngredients = (dictionary:Map<string, number>, cookTime:number, item:requiredItem):boolean => {
+  const itemEntry = findRecipe(item.name);
+  if (!itemEntry) {
+    return false;
+  }
+  if ('cookTime' in itemEntry) {
+    dictionary.set(item.name, getOrDefault(dictionary, item.name)+item.quantity);
+    cookTime += item.quantity*itemEntry.cookTime;
+  } else {
+    for (const item of itemEntry.requiredItems) {
+      if (!getIngredients(dictionary, cookTime, item)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
 // =============================================================================
 // ==== DO NOT TOUCH ===========================================================
 // =============================================================================

@@ -19,6 +19,7 @@ interface ingredient extends cookbookEntry {
   cookTime: number;
 }
 
+//So that cookTime can be updated during the recursive function in part 3
 interface cookTimeObj {
   cookTime:number;
 }
@@ -158,8 +159,9 @@ app.get("/summary", (req:Request, res:Request) => {
   if ('cookTime' in recipe) {
     return res.status(400).send({"message":"ingredient name entered!"});
   }
+
   let dictionary: Map<string, number> = new Map()
-  let cookTimeObj = {cookTime: 0};
+  let cookTimeObj = {cookTime: 0}; 
   for (const item of recipe.requiredItems) {
     if (!getIngredients(dictionary, cookTimeObj, item)) {
       return res.status(400).send({"message":"Failed to find ingredient!"});

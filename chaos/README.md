@@ -31,18 +31,35 @@ Write (Postgres) SQL `CREATE TABLE` statements to create the following schema.
 Make sure to include foreign keys for the relationships that will `CASCADE` upon deletion.
 ![Database Schema](db_schema.png)
 
+I've only dabbled in sql a bit so this might be dead wrong... Also idk any rust ;_;
+
 **Answer box:**
 ```sql
 CREATE TABLE forms (
     --     Add columns here
+    id INT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL
+    PRIMARY KEY (id)
 );
 
 CREATE TABLE questions (
     --     Add columns here
+    id INT NOT NULL,
+    form_id INT NOT NULL,
+    title TEXT NOT NULL,
+    question_type ENUM('ShortAnswer', 'MultiSelect', 'MultiChoice') NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (form_id) REFERENCES forms(id)
 );
 
 CREATE TABLE question_options (
     --     Add columns here
+    id INT NOT NULL,
+    question_id INT NOT NULL,
+    option TEXT NOT NULL,
+    PRIMARY KEY (id)
+    FOREIGN KEY (question_id) REFERENCES questions(id)
 );
 ```
 
@@ -58,5 +75,5 @@ Using the above schema, write a (Postgres) SQL `SELECT` query to return all ques
 
 **Answer box:**
 ```sql
--- Write query here
+-- SELECT q.id, q.form_id, q.title, qu.question_type, ARRAY_AGG(qo.option) AS options FROM questions q INNER JOIN question_options qo ON q.id = qo.question_id WHERE form_id = 26583
 ```

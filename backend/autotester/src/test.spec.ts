@@ -153,7 +153,7 @@ describe("Task 3", () => {
       expect(resp2.status).toBe(400);
     });
 
-    it("Bro cooked", async () => {
+    /*it("Bro cooked", async () => {
       const meatball = {
         type: "recipe",
         name: "Skibidi",
@@ -171,6 +171,34 @@ describe("Task 3", () => {
 
       const resp3 = await getTask3("Skibidi");
       console.log(resp3);
+      expect(resp3.status).toBe(200);
+    });
+    */
+    it("Bro cooked2", async () => {
+      const meatball2 = {
+        type: "recipe",
+        name: "Skibidi",
+        requiredItems: [{ name: "Bruh", quantity: 1 }, {name:"BruhJuice", quantity: 1}],
+      };
+      const resp1 = await postEntry(meatball2);
+      expect(resp1.status).toBe(200);
+
+      const resp2 = await postEntry({
+        type: "ingredient",
+        name: "Bruh",
+        cookTime: 2,
+      });
+      expect(resp2.status).toBe(200);
+
+      const resp4 = await postEntry({
+        type: "recipe",
+        name: "BruhJuice",
+        requiredItems: [{ name: "Bruh", quantity: 1 }]
+      });
+      expect(resp4.status).toBe(200);
+
+      const resp3 = await getTask3("Skibidi");
+      console.log(resp3.body);
       expect(resp3.status).toBe(200);
     });
   });

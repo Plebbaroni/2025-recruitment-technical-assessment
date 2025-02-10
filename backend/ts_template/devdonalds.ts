@@ -19,6 +19,10 @@ interface ingredient extends cookbookEntry {
   cookTime: number;
 }
 
+interface cookTimeObj {
+  cookTime:number;
+}
+
 // =============================================================================
 // ==== HTTP Endpoint Stubs ====================================================
 // =============================================================================
@@ -136,7 +140,7 @@ const hasUniqueIngredients = (requiredItems): boolean => {
 //getOrDefault function that returns 0 if key doesn't exist
 const getOrDefault = (dictionary:Map<string, number>, key:string):number => {
   const num = dictionary.get(key);
-  if (num === null) {
+  if (num === undefined) {
     return 0;
   } 
   return num;
@@ -155,17 +159,18 @@ app.get("/summary", (req:Request, res:Request) => {
     return res.status(400).send({"message":"ingredient name entered!"});
   }
   let dictionary: Map<string, number> = new Map()
-  let cookTime = 0;
+  let cookTimeObj = {cookTime: 0};
   for (const item of recipe.requiredItems) {
-    if (!getIngredients(dictionary, cookTime, item)) {
+    if (!getIngredients(dictionary, cookTimeObj, item)) {
       return res.status(400).send({"message":"Failed to find ingredient!"});
     }
   }
 
+  
   return res.status(200).send({
     "name": recipeName,
-    "cookTime":cookTime,
-    "ingredients":dictionary
+    "cookTime":cookTimeObj.cookTime,
+    "ingredients":Array.from(dictionary.entries())
   })
 
 });
@@ -173,17 +178,17 @@ app.get("/summary", (req:Request, res:Request) => {
 //HELPER FUNCTIONS FOR TASK 3
 //Recursively adds ingredients, quantity, and cookTime to the dictionary, returning true if it was
 //successful in finding the ingredients. Otherwise returns false.
-const getIngredients = (dictionary:Map<string, number>, cookTime:number, item:requiredItem):boolean => {
+const getIngredients = (dictionary:Map<string, number>, cookTimeObj:cookTimeObj, item:requiredItem):boolean => {
   const itemEntry = findRecipe(item.name);
   if (!itemEntry) {
     return false;
   }
   if ('cookTime' in itemEntry) {
     dictionary.set(item.name, getOrDefault(dictionary, item.name)+item.quantity);
-    cookTime += item.quantity*itemEntry.cookTime;
+    cookTimeObj.cookTime += item.quantity*itemEntry.cookTime;
   } else {
     for (const item of itemEntry.requiredItems) {
-      if (!getIngredients(dictionary, cookTime, item)) {
+      if (!getIngredients(dictionary, cookTimeObj, item)) {
         return false;
       }
     }

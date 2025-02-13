@@ -141,7 +141,7 @@ const hasUniqueIngredients = (requiredItems): boolean => {
 //getOrDefault function that returns 0 if key doesn't exist
 const getOrDefault = (dictionary:Map<string, number>, key:string):number => {
   const num = dictionary.get(key);
-  if (num === undefined) {
+  if (!num) {
     return 0;
   } 
   return num;
@@ -174,7 +174,6 @@ app.get("/summary", (req:Request, res:Request) => {
     "cookTime":cookTimeObj.cookTime,
     "ingredients":Array.from(dictionary.entries())
   })
-
 });
 
 //HELPER FUNCTIONS FOR TASK 3
@@ -189,9 +188,11 @@ const getIngredients = (dictionary:Map<string, number>, cookTimeObj:cookTimeObj,
     dictionary.set(item.name, getOrDefault(dictionary, item.name)+item.quantity);
     cookTimeObj.cookTime += item.quantity*itemEntry.cookTime;
   } else {
-    for (const item of itemEntry.requiredItems) {
-      if (!getIngredients(dictionary, cookTimeObj, item)) {
-        return false;
+    for (let i = 0; i < item.quantity; i++) {
+      for (const item of itemEntry.requiredItems) {
+        if (!getIngredients(dictionary, cookTimeObj, item)) {
+          return false;
+        }
       }
     }
   }

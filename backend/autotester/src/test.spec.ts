@@ -201,5 +201,84 @@ describe("Task 3", () => {
       console.log(resp3.body);
       expect(resp3.status).toBe(200);
     });
+
+    it("example", async () => {
+      await postEntry({
+        "type": "recipe",
+        "name": "Skibidi Spaghetti",
+        "requiredItems": [
+          {
+            "name": "Meatball",
+            "quantity": 3
+          },
+          {
+            "name": "Pasta",
+            "quantity": 1
+          },
+          {
+            "name": "Tomato",
+            "quantity": 2
+          }
+        ]
+      })
+
+      await postEntry({
+        "type": "recipe",
+        "name": "Meatball",
+        "requiredItems": [
+          {
+            "name": "Beef",
+            "quantity": 2
+          },
+          {
+            "name": "Egg",
+            "quantity": 1
+          }
+        ]
+      })
+
+      await postEntry({
+        "type": "recipe",
+        "name": "Pasta",
+        "requiredItems": [
+          {
+            "name": "Flour",
+            "quantity": 3
+          },
+          {
+            "name": "Egg",
+            "quantity": 1
+          }
+        ]
+      })
+
+    await postEntry({
+        "type": "ingredient",
+        "name": "Beef",
+        "cookTime": 5
+    })
+
+    await postEntry({
+      "type": "ingredient",
+      "name": "Egg",
+      "cookTime": 3,
+    })
+
+    await postEntry({
+      "type": "ingredient",
+      "name": "Flour",
+      "cookTime": 0
+    })
+
+    await postEntry({
+      "type": "ingredient",
+      "name": "Tomato",
+      "cookTime": 2,
+    })
+
+    const resp3 = await getTask3("Skibidi Spaghetti");
+    console.log(resp3.body);
+    expect(resp3.status).toBe(200);
+    })
   });
 });
